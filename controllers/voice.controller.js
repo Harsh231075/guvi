@@ -6,26 +6,32 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 ffmpeg.setFfmpegPath(ffmpegPath);
 
-const genAI = new GoogleGenerativeAI('AIzaSyCkIidKZ0VfEJHtMJjwmUbDURJl3_EPMdc');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const allowedLanguages = ["Tamil", "English", "Hindi", "Malayalam", "Telugu"];
 
 export const detectVoice = async (req, res) => {
   let wavPath;
+  let mp3Path;
 
   try {
-    const { language, audioFormat } = req.body;
-    const file = req.file;
+    const { language, audioFormat, audioBase64 } = req.body;
 
-    if (!file || !language || audioFormat !== "mp3" || !allowedLanguages.includes(language)) {
+    if (!audioBase64 || !language || audioFormat !== "mp3" || !allowedLanguages.includes(language)) {
       return res.status(400).json({
         status: "error",
-        message: "Invalid input format"
+        message: "Invalid input format. Required: language, audioFormat='mp3', audioBase64 string"
       });
     }
 
-    const mp3Path = file.path;
+    mp3Path = `uploads/${Date.now()}.mp3`;
     wavPath = `uploads/${Date.now()}.wav`;
+
+    // Clean Base64 string (remove data URI prefix if present)
+    const base64Data = audioBase64.replace(/^data:audio\/\w+;base64,/, "");
+    const mp3Buffer = Buffer.from(base64Data, 'base64');
+    
+    fs.writeFileSync(mp3Path, mp3Buffer);
 
     // 🎵 Convert MP3 → WAV
     await new Promise((resolve, reject) => {
@@ -37,8 +43,8 @@ export const detectVoice = async (req, res) => {
     });
 
     // 📊 Extract audio samples
-    const buffer = fs.readFileSync(wavPath);
-    const result = wav.decode(buffer);
+    const wavBuffer = fs.readFileSync(wavPath);
+    const result = wav.decode(wavBuffer);
     const samples = result.channelData[0];
 
     let sum = 0;
@@ -118,12 +124,13 @@ Reply ONLY in JSON:
   } catch (err) {
     console.error(err);
 
-    if (req.file?.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    if (mp3Path && fs.existsSync(mp3Path)) fs.unlinkSync(mp3Path);
     if (wavPath && fs.existsSync(wavPath)) fs.unlinkSync(wavPath);
 
     return res.status(500).json({
       status: "error",
-      message: "Processing failed"
+      message: "Processing failed",
+      error: err.message // Return specific error for debugging
     });
   }
 };
