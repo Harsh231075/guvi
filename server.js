@@ -1,12 +1,14 @@
 import "dotenv/config";
 import express from "express";
+import cors from "cors";
 import voiceRoutes from "./routes/voice.routes.js";
 
 const app = express();
+app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
 app.get("/", (req, res) => {
-  res.send({ status: "running", version: "openrouter-fix-v3" });
+  res.send({ status: "running", version: "openrouter-fix-v4-cors" });
 });
 
 app.use("/api", voiceRoutes);
