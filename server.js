@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
 app.get("/", (req, res) => {
-  res.send({ status: "running", version: "v5-debug-dataUrl" });
+  res.send({ status: "running", version: "v6-refined-prompt" });
 });
 
 app.use("/api", voiceRoutes);

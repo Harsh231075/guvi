@@ -46,19 +46,23 @@ export const detectVoice = async (req, res) => {
             content: [
               {
                 type: "text",
-                text: `You are an AI voice authenticity detector.
-Analyze this audio for:
-- Natural breathing patterns
-- Micro-tremors of human vocal cords
-- Digital artifacts
+                text: `You are an expert AI audio forensics analyst.
+Your task is to detect if this voice is AI-GENERATED or HUMAN.
 
-Only classify as AI_GENERATED if strong evidence exists.
+Analyze strictly for:
+1. Unnatural perfectness (lack of breaths, pauses, or micro-stutters).
+2. "Metallic" or robotic artifacts in high frequencies.
+3. Inconsistent background noise or sudden spectral cutoffs.
+4. Pitch consistency that appears mathematically generated.
+
+If you suspect this is synthetic, classify as AI_GENERATED.
+Do not default to HUMAN unless you hear distinct organic traits (mouth clicks, irregular breaths).
 
 Reply ONLY in JSON:
 {
  "classification": "AI_GENERATED" or "HUMAN",
- "confidenceScore": number 0-1,
- "explanation": "short technical reason"
+ "confidenceScore": number 0-1 (1 = certain),
+ "explanation": "technical reason citing specific artifacts or lack thereof"
 }`
               },
               {
