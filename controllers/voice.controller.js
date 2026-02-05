@@ -20,7 +20,7 @@ export const detectVoice = async (req, res) => {
     const base64Data = audioBase64.replace(/^data:audio\/\w+;base64,/, "");
 
     // 🤖 Gemini reasoning
-    const model = genAI.getGenerativeModel({ model: "models/gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
 You are an AI voice authenticity detector.
