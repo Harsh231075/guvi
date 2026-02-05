@@ -1,7 +1,4 @@
-// import fs from "fs"; removed unused import
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+import axios from "axios";
 
 const allowedLanguages = ["Tamil", "English", "Hindi", "Malayalam", "Telugu"];
 
@@ -16,46 +13,66 @@ export const detectVoice = async (req, res) => {
       });
     }
 
-    // Clean Base64 string (remove data URI prefix if present)
-    const base64Data = audioBase64.replace(/^data:audio\/\w+;base64,/, "");
+    // Ensure we have a valid Data URI or raw base64
+    let dataUrl = audioBase64;
+    if (!audioBase64.startsWith("data:")) {
+      dataUrl = `data:audio/mp3;base64,${audioBase64}`;
+    }
 
-    // 🤖 Gemini reasoning
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    // 🤖 OpenRouter (Gemini 2.0 Flash)
+    // We use the OpenAI-compatible endpoint.
+    // Note: Passing audio via 'image_url' (or generic content part with data URI) allows OpenRouter/Google to handle it.
+    
+    const response = await axios.post(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        model: "google/gemini-2.0-flash-001",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `You are an AI voice authenticity detector.
+Analyze this audio for:
+- Natural breathing patterns
+- Micro-tremors of human vocal cords
+- Digital artifacts
 
-    const prompt = `
-You are an AI voice authenticity detector.
-Please listen to the attached audio sample.
-
-Analyze the audio for:
-- Natural breathing patterns and pauses
-- Micro-tremors and irregularities typical of human vocal cords
-- Digital artifacts or "glitches" typical of synthesis
-- Consistencies in tone and cadence
-
-Only classify as AI_GENERATED if there is strong evidence.
+Only classify as AI_GENERATED if strong evidence exists.
 
 Reply ONLY in JSON:
 {
  "classification": "AI_GENERATED" or "HUMAN",
- "confidenceScore": number between 0 and 1,
+ "confidenceScore": number 0-1,
  "explanation": "short technical reason"
-}
-`;
-
-    const result = await model.generateContent([
-      prompt,
+}`
+              },
+              {
+                type: "image_url", 
+                image_url: {
+                  url: dataUrl
+                }
+              }
+            ]
+          }
+        ]
+      },
       {
-        inlineData: {
-          mimeType: "audio/mp3",
-          data: base64Data
+        headers: {
+          "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://guvi-voice-api.onrender.com", 
+          "X-Title": "Guvi Voice API"
         }
       }
-    ]);
+    );
 
-    let text = result.response.text();
-    text = text.replace(/```json|```/g, "").trim();
-
-    const aiResult = JSON.parse(text);
+    const content = response.data.choices[0].message.content;
+    
+    // Parse JSON from the messy Markdown response
+    let cleanJson = content.replace(/```json|```/g, "").trim();
+    const aiResult = JSON.parse(cleanJson);
 
     return res.json({
       status: "success",
@@ -66,12 +83,12 @@ Reply ONLY in JSON:
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("OpenRouter Error:", err.response?.data || err.message);
 
     return res.status(500).json({
       status: "error",
       message: "Processing failed",
-      error: err.message 
+      error: err.response?.data?.error?.message || err.message
     });
   }
 };
