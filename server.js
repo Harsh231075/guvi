@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
 app.get("/", (req, res) => {
-  res.send({ status: "running", version: "openrouter-fix-v4-cors" });
+  res.send({ status: "running", version: "v5-debug-dataUrl" });
 });
 
 app.use("/api", voiceRoutes);

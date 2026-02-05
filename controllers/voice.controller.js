@@ -19,6 +19,8 @@ export const detectVoice = async (req, res) => {
       dataUrl = `data:audio/mp3;base64,${audioBase64}`;
     }
 
+    console.log("Constructed dataUrl length:", dataUrl.length);
+
     // 🤖 OpenRouter (Gemini 2.0 Flash)
     // We use the OpenAI-compatible endpoint.
     // Note: Passing audio via 'image_url' (or generic content part with data URI) allows OpenRouter/Google to handle it.
