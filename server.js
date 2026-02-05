@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 
 app.get("/", (req, res) => {
-  res.send("Voice Detection API is running.");
+  res.send({ status: "running", version: "gemini-2.0-flash-fix" });
 });
 
 app.use("/api", voiceRoutes);
