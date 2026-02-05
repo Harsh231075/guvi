@@ -1,4 +1,4 @@
-import fs from "fs";
+// import fs from "fs"; removed unused import
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
