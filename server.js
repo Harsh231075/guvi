@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 
 app.get("/", (req, res) => {
-  res.send({ status: "running", version: "openrouter-fix-v2" });
+  res.send({ status: "running", version: "openrouter-fix-v3" });
 });
 
 app.use("/api", voiceRoutes);
